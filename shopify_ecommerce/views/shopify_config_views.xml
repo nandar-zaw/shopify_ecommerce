@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Shopify config menu — placeholder for now -->
+        <record id="action_shopify_config" model="ir.actions.act_window">
+            <field name="name">Shopify Configuration</field>
+            <field name="res_model">shopify.config</field>
+            <field name="view_mode">list,form</field>
+        </record>
+
+        <record id="action_shopify_sync_log" model="ir.actions.act_window">
+            <field name="name">Sync Log</field>
+            <field name="res_model">shopify.sync</field>
+            <field name="view_mode">list,form</field>
+        </record>
+
+        <menuitem id="menu_shopify_root"
+                  name="Shopify"
+                  sequence="90"/>
+        <menuitem id="menu_shopify_config"
+                  name="Configuration"
+                  parent="menu_shopify_root"
+                  action="action_shopify_config"
+                  sequence="10"/>
+        <menuitem id="menu_shopify_sync"
+                  name="Sync Log"
+                  parent="menu_shopify_root"
+                  action="action_shopify_sync_log"
+                  sequence="20"/>
+    </data>
+</odoo>

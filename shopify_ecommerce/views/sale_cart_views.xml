@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="action_sale_cart" model="ir.actions.act_window">
+            <field name="name">Shopping Carts</field>
+            <field name="res_model">sale.cart</field>
+            <field name="view_mode">list,form</field>
+        </record>
+    </data>
+</odoo>

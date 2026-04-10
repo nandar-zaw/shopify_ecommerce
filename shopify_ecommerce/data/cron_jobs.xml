@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="cron_shopify_order_sync" model="ir.cron">
+            <field name="name">Shopify: import new orders</field>
+            <field name="model_id" ref="model_shopify_config"/>
+            <field name="state">code</field>
+            <field name="code">model.search([('is_active','=',True)])._cron_import_orders()</field>
+            <field name="interval_number">15</field>
+            <field name="interval_type">minutes</field>
+            <field name="numbercall">-1</field>
+            <field name="active">False</field>
+        </record>
+
+        <record id="cron_shopify_inventory_sync" model="ir.cron">
+            <field name="name">Shopify: push inventory levels</field>
+            <field name="model_id" ref="model_shopify_config"/>
+            <field name="state">code</field>
+            <field name="code">model.search([('is_active','=',True)])._cron_sync_inventory()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">hours</field>
+            <field name="numbercall">-1</field>
+            <field name="active">False</field>
+        </record>
+    </data>
+</odoo>
