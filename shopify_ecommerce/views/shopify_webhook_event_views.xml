@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+		<record id="view_shopify_webhook_event_tree" model="ir.ui.view">
+			<field name="name">shopify.webhook.event.tree</field>
+			<field name="model">shopify.webhook.event</field>
+			<field name="arch" type="xml">
+				<tree>
+					<field name="topic"/>
+					<field name="received_at"/>
+					<field name="processing_status"/>
+					<field name="hmac_valid"/>
+				</tree>
+			</field>
+		</record>
+
+		<record id="view_shopify_webhook_event_form" model="ir.ui.view">
+			<field name="name">shopify.webhook.event.form</field>
+			<field name="model">shopify.webhook.event</field>
+			<field name="arch" type="xml">
+				<form>
+					<sheet>
+						<group>
+							<field name="topic"/>
+							<field name="received_at"/>
+							<field name="processing_status"/>
+							<field name="hmac_valid"/>
+						</group>
+						<group>
+							<field name="payload"/>
+						</group>
+					</sheet>
+				</form>
+			</field>
+		</record>
+
+		<record id="action_shopify_webhook_event" model="ir.actions.act_window">
+			<field name="name">Webhook Events</field>
+			<field name="res_model">shopify.webhook.event</field>
+			<field name="view_mode">tree,form</field>
+		</record>
+
+		<menuitem id="menu_shopflow_shopify_webhooks"
+				  name="Webhooks"
+				  parent="menu_shopflow_shopify"
+				  action="action_shopify_webhook_event"
+				  sequence="30"/>
+	</data>
+</odoo>
+

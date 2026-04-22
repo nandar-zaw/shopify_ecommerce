@@ -1,31 +1,137 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data>
-        <!-- Shopify config menu — placeholder for now -->
+        <menuitem id="menu_shopflow_root" name="ShopFlow" sequence="50"/>
+        <menuitem id="menu_shopflow_customers" name="Customers" parent="menu_shopflow_root" sequence="10"/>
+        <menuitem id="menu_shopflow_catalog"
+                  name="Catalog"
+                  parent="menu_shopflow_root"
+                  action="action_shopflow_catalog"
+                  sequence="20"/>
+        <menuitem id="menu_shopflow_orders" name="Orders" parent="menu_shopflow_root" sequence="30"/>
+        <menuitem id="menu_shopflow_shopify" name="Shopify" parent="menu_shopflow_root" sequence="40"/>
+        <menuitem id="menu_shopflow_ai" name="AI Insights" parent="menu_shopflow_root" sequence="50"/>
+
+        <record id="view_shopify_config_tree" model="ir.ui.view">
+            <field name="name">shopify.config.tree</field>
+            <field name="model">shopify.config</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="store_url"/>
+                    <field name="api_key"/>
+                    <field name="api_version"/>
+                    <field name="last_test_status"/>
+                    <field name="last_tested_on"/>
+                    <field name="active"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_shopify_config_form" model="ir.ui.view">
+            <field name="name">shopify.config.form</field>
+            <field name="model">shopify.config</field>
+            <field name="arch" type="xml">
+                <form>
+                    <header>
+                        <button name="action_test_connection"
+                                type="object"
+                                string="Test Connection"
+                                class="btn-primary"/>
+                        <button name="action_sync_orders_now"
+                                type="object"
+                                string="Sync Orders Now"
+                                class="btn-secondary"/>
+                    </header>
+                    <sheet>
+                        <group>
+                            <field name="name"/>
+                            <field name="store_url"/>
+                            <field name="api_key"/>
+                            <field name="api_secret" password="True"/>
+                            <field name="webhook_secret" password="True"/>
+                            <field name="api_version"/>
+<!--                            <label string="Access tokens are requested and cached automatically; no manual token is stored."/>-->
+                            <field name="last_tested_on" readonly="1"/>
+                            <field name="last_test_status" readonly="1"/>
+                            <field name="last_test_message" readonly="1"/>
+                            <field name="active"/>
+                        </group>
+                        <notebook>
+                            <page string="Sync Logs">
+                                <field name="sync_log_ids" nolabel="1">
+                                    <tree editable="bottom">
+                                        <field name="sync_type"/>
+                                        <field name="direction"/>
+                                        <field name="status"/>
+                                        <field name="start_time"/>
+                                        <field name="end_time"/>
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_shopify_sync_log_tree" model="ir.ui.view">
+            <field name="name">shopify.sync.log.tree</field>
+            <field name="model">shopify.sync.log</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="config_id"/>
+                    <field name="sync_type"/>
+                    <field name="direction"/>
+                    <field name="status"/>
+                    <field name="start_time"/>
+                    <field name="end_time"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_shopify_sync_log_form" model="ir.ui.view">
+            <field name="name">shopify.sync.log.form</field>
+            <field name="model">shopify.sync.log</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <field name="config_id"/>
+                            <field name="sync_type"/>
+                            <field name="direction"/>
+                            <field name="status"/>
+                            <field name="start_time"/>
+                            <field name="end_time"/>
+                            <field name="error_message"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
         <record id="action_shopify_config" model="ir.actions.act_window">
-            <field name="name">Shopify Configuration</field>
+            <field name="name">Shopify Configurations</field>
             <field name="res_model">shopify.config</field>
-            <field name="view_mode">list,form</field>
+            <field name="view_mode">tree,form</field>
         </record>
 
         <record id="action_shopify_sync_log" model="ir.actions.act_window">
-            <field name="name">Sync Log</field>
-            <field name="res_model">shopify.sync</field>
-            <field name="view_mode">list,form</field>
+            <field name="name">Sync Logs</field>
+            <field name="res_model">shopify.sync.log</field>
+            <field name="view_mode">tree,form</field>
         </record>
 
-        <menuitem id="menu_shopify_root"
-                  name="Shopify"
-                  sequence="90"/>
-        <menuitem id="menu_shopify_config"
-                  name="Configuration"
-                  parent="menu_shopify_root"
+        <menuitem id="menu_shopflow_shopify_config"
+                  name="Configurations"
+                  parent="menu_shopflow_shopify"
                   action="action_shopify_config"
                   sequence="10"/>
-        <menuitem id="menu_shopify_sync"
-                  name="Sync Log"
-                  parent="menu_shopify_root"
+        <menuitem id="menu_shopflow_shopify_sync_logs"
+                  name="Sync Logs"
+                  parent="menu_shopflow_shopify"
                   action="action_shopify_sync_log"
                   sequence="20"/>
     </data>
 </odoo>
+

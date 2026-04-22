@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+		<record id="view_shopify_ai_recommendation_tree" model="ir.ui.view">
+			<field name="name">shopify.ai.recommendation.tree</field>
+			<field name="model">shopify.ai.recommendation</field>
+			<field name="arch" type="xml">
+				<tree>
+					<field name="customer_id"/>
+					<field name="product_id"/>
+					<field name="recommendation_type"/>
+					<field name="confidence_score"/>
+					<field name="generated_at"/>
+					<field name="accepted"/>
+				</tree>
+			</field>
+		</record>
+
+		<record id="view_shopify_ai_recommendation_form" model="ir.ui.view">
+			<field name="name">shopify.ai.recommendation.form</field>
+			<field name="model">shopify.ai.recommendation</field>
+			<field name="arch" type="xml">
+				<form>
+					<sheet>
+						<group>
+							<field name="customer_id"/>
+							<field name="product_id"/>
+							<field name="recommendation_type"/>
+							<field name="confidence_score"/>
+							<field name="generated_at"/>
+							<field name="model_version"/>
+							<field name="accepted"/>
+						</group>
+					</sheet>
+				</form>
+			</field>
+		</record>
+
+		<record id="action_shopify_ai_recommendation" model="ir.actions.act_window">
+			<field name="name">Recommendations</field>
+			<field name="res_model">shopify.ai.recommendation</field>
+			<field name="view_mode">tree,form</field>
+		</record>
+
+		<menuitem id="menu_shopflow_ai_recommendation"
+				  name="Recommendations"
+				  parent="menu_shopflow_ai"
+				  action="action_shopify_ai_recommendation"
+				  sequence="10"/>
+	</data>
+</odoo>
+

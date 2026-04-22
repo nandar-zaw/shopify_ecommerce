@@ -1,14 +1,11 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_sale_cart_user,sale.cart user,model_sale_cart,sales_team.group_sale_salesman,1,1,1,0
-access_sale_cart_manager,sale.cart manager,model_sale_cart,sales_team.group_sale_salesman_all_leads,1,1,1,1
-access_sale_cart_line_user,sale.cart.line user,model_sale_cart_line,sales_team.group_sale_salesman,1,1,1,0
-access_sale_cart_line_manager,sale.cart.line manager,model_sale_cart_line,sales_team.group_sale_salesman_all_leads,1,1,1,1
-access_shopify_config_manager,shopify.config manager,model_shopify_config,base.group_system,1,1,1,1
-access_shopify_sync_user,shopify.sync user,model_shopify_sync,sales_team.group_sale_salesman,1,0,0,0
-access_shopify_sync_manager,shopify.sync manager,model_shopify_sync,base.group_system,1,1,1,1
-access_shopify_webhook_event,shopify.webhook.event,model_shopify_webhook_event,base.group_system,1,1,1,1
-access_ai_recommendation_user,ai.recommendation user,model_shopify_ai_recommendation,sales_team.group_sale_salesman,1,0,0,0
-access_ai_recommendation_manager,ai.recommendation manager,model_shopify_ai_recommendation,base.group_system,1,1,1,1
-access_lead_score_manager,lead.score manager,model_shopify_lead_score,base.group_system,1,1,1,1
-access_ai_chat_session_user,ai.chat.session user,model_shopify_ai_chat_session,sales_team.group_sale_salesman,1,1,1,0
-access_ai_chat_session_manager,ai.chat.session manager,model_shopify_ai_chat_session,base.group_system,1,1,1,1
+access_shopify_cart_user,shopify.cart user,model_shopify_cart,base.group_user,1,1,1,1
+access_shopify_cart_item_user,shopify.cart.item user,model_shopify_cart_item,base.group_user,1,1,1,1
+access_shopify_config_user,shopify.config user,model_shopify_config,base.group_user,1,1,1,1
+access_shopify_sync_log_user,shopify.sync.log user,model_shopify_sync_log,base.group_user,1,1,1,1
+access_shopify_webhook_event_user,shopify.webhook.event user,model_shopify_webhook_event,base.group_user,1,1,1,1
+access_shopify_sync_user,shopify.sync user,model_shopify_sync,base.group_user,1,1,1,1
+access_shopify_ai_recommendation_user,shopify.ai.recommendation user,model_shopify_ai_recommendation,base.group_user,1,1,1,1
+access_shopify_ai_lead_score_user,shopify.ai.lead.score user,model_shopify_ai_lead_score,base.group_user,1,1,1,1
+access_shopify_ai_chat_session_user,shopify.ai.chat.session user,model_shopify_ai_chat_session,base.group_user,1,1,1,1
+access_shopify_product_sync_wizard_user,shopify.product.sync.wizard user,model_shopify_product_sync_wizard,base.group_user,1,1,1,1

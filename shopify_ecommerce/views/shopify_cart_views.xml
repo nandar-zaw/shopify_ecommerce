@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+		<record id="view_shopify_cart_tree" model="ir.ui.view">
+			<field name="name">shopify.cart.tree</field>
+			<field name="model">shopify.cart</field>
+			<field name="arch" type="xml">
+				<tree>
+					<field name="customer_id"/>
+					<field name="session_ref"/>
+					<field name="discount_code"/>
+					<field name="discount_amount"/>
+					<field name="subtotal"/>
+					<field name="state"/>
+				</tree>
+			</field>
+		</record>
+
+		<record id="view_shopify_cart_form" model="ir.ui.view">
+			<field name="name">shopify.cart.form</field>
+			<field name="model">shopify.cart</field>
+			<field name="arch" type="xml">
+				<form>
+					<sheet>
+						<group>
+							<field name="customer_id"/>
+							<field name="session_ref"/>
+							<field name="discount_code"/>
+							<field name="discount_amount"/>
+							<field name="subtotal" readonly="1"/>
+							<field name="state"/>
+						</group>
+						<group string="Items">
+							<field name="cart_item_ids" nolabel="1">
+								<tree editable="bottom">
+									<field name="product_id"/>
+									<field name="quantity"/>
+									<field name="unit_price"/>
+									<field name="line_total" readonly="1"/>
+								</tree>
+							</field>
+						</group>
+					</sheet>
+				</form>
+			</field>
+		</record>
+
+		<record id="action_shopify_cart" model="ir.actions.act_window">
+			<field name="name">Carts</field>
+			<field name="res_model">shopify.cart</field>
+			<field name="view_mode">tree,form</field>
+		</record>
+
+		<menuitem id="menu_shopflow_orders_carts"
+				  name="Carts"
+				  parent="menu_shopflow_orders"
+				  action="action_shopify_cart"
+				  sequence="20"/>
+	</data>
+</odoo>
+

@@ -1,58 +1,51 @@
-from odoo import models, fields
+import logging
 
-class AIRecommendation(models.Model):
-    _name        = 'shopify.ai.recommendation'
-    _description = 'AI product recommendation'
-    _order       = 'generated_at desc'
+from odoo import fields, models
 
-    customer_id   = fields.Many2one('res.partner', string='Customer', required=True, ondelete='cascade')
-    product_id    = fields.Many2one('product.template', string='Recommended product', required=True)
-    rec_type      = fields.Selection([
-        ('collaborative', 'Collaborative filtering'),
-        ('content',       'Content-based'),
-        ('hybrid',        'Hybrid'),
-    ], string='Recommendation type')
-    score         = fields.Float(string='Confidence score', digits=(5, 4))
-    generated_at  = fields.Datetime(string='Generated', default=fields.Datetime.now)
-    model_version = fields.Char(string='Model version')
-    accepted      = fields.Boolean(string='Customer accepted', default=False)
+_logger = logging.getLogger(__name__)
 
 
-class LeadScore(models.Model):
-    _name        = 'shopify.lead.score'
-    _description = 'AI lead conversion score'
+class ShopifyAIRecommendation(models.Model):
+    _name = 'shopify.ai.recommendation'
+    _description = 'Shopify AI Recommendation'
+    _order = 'generated_at desc, id desc'
 
-    partner_id    = fields.Many2one('res.partner', string='Customer / lead', required=True, ondelete='cascade')
-    score         = fields.Float(string='Conversion probability', digits=(5, 4))
-    scored_at     = fields.Datetime(string='Scored at', default=fields.Datetime.now)
-    features_json = fields.Text(string='Feature vector (JSON)')
-    model_version = fields.Char(string='Model version')
-    score_band    = fields.Selection([
-        ('hot',  'Hot  (>0.7)'),
-        ('warm', 'Warm (0.4–0.7)'),
-        ('cold', 'Cold (<0.4)'),
-    ], string='Score band', compute='_compute_band', store=True)
-
-    def _compute_band(self):
-        for rec in self:
-            if rec.score >= 0.7:
-                rec.score_band = 'hot'
-            elif rec.score >= 0.4:
-                rec.score_band = 'warm'
-            else:
-                rec.score_band = 'cold'
+    customer_id = fields.Many2one('res.partner', string='Customer')
+    product_id = fields.Many2one('product.template', string='Product')
+    recommendation_type = fields.Char(string='Recommendation Type')
+    confidence_score = fields.Float(string='Confidence Score')
+    generated_at = fields.Datetime(string='Generated At', default=fields.Datetime.now)
+    model_version = fields.Char(string='Model Version')
+    accepted = fields.Boolean(string='Accepted', default=False)
 
 
-class AIChatSession(models.Model):
-    _name        = 'shopify.ai.chat.session'
-    _description = 'AI customer support chat session'
-    _order       = 'started_at desc'
+class ShopifyAILeadScore(models.Model):
+    _name = 'shopify.ai.lead.score'
+    _description = 'Shopify AI Lead Score'
+    _order = 'evaluated_at desc, id desc'
 
-    partner_id    = fields.Many2one('res.partner', string='Customer')
-    started_at    = fields.Datetime(string='Started', default=fields.Datetime.now)
-    ended_at      = fields.Datetime(string='Ended')
-    resolved      = fields.Boolean(string='Resolved', default=False)
-    escalated     = fields.Boolean(string='Escalated to human', default=False)
-    satisfaction  = fields.Integer(string='CSAT score (1–5)')
-    transcript    = fields.Text(string='Conversation transcript')
-    sale_order_id = fields.Many2one('sale.order', string='Related order')
+    customer_id = fields.Many2one('res.partner', string='Customer')
+    conversion_probability = fields.Float(string='Conversion Probability')
+    features = fields.Text(string='Features')
+    evaluated_at = fields.Datetime(string='Evaluated At', default=fields.Datetime.now)
+    model_version = fields.Char(string='Model Version')
+
+
+class ShopifyAIChatSession(models.Model):
+    _name = 'shopify.ai.chat.session'
+    _description = 'Shopify AI Chat Session'
+    _order = 'start_time desc, id desc'
+
+    customer_id = fields.Many2one('res.partner', string='Customer')
+    start_time = fields.Datetime(string='Start Time', default=fields.Datetime.now)
+    end_time = fields.Datetime(string='End Time')
+    resolved = fields.Boolean(string='Resolved', default=False)
+    escalated = fields.Boolean(string='Escalated', default=False)
+    satisfaction_rating = fields.Integer(string='Satisfaction Rating')
+    agent_id = fields.Many2one('res.users', string='Assigned Agent')
+
+    def escalate_to_agent(self, agent_id):
+        for session in self:
+            agent = self.env['res.users'].browse(agent_id)
+            session.write({'escalated': True, 'agent_id': agent.id})
+            _logger.info('Chat session %s escalated to agent %s', session.id, agent.name)

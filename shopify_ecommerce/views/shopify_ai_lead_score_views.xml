@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="view_shopify_ai_lead_score_tree" model="ir.ui.view">
+            <field name="name">shopify.ai.lead.score.tree</field>
+            <field name="model">shopify.ai.lead.score</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="customer_id"/>
+                    <field name="conversion_probability"/>
+                    <field name="evaluated_at"/>
+                    <field name="model_version"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_shopify_ai_lead_score_form" model="ir.ui.view">
+            <field name="name">shopify.ai.lead.score.form</field>
+            <field name="model">shopify.ai.lead.score</field>
+            <field name="arch" type="xml">
+                <form>
+                    <sheet>
+                        <group>
+                            <field name="customer_id"/>
+                            <field name="conversion_probability"/>
+                            <field name="evaluated_at"/>
+                            <field name="model_version"/>
+                        </group>
+                        <group>
+                            <field name="features"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <record id="action_shopify_ai_lead_score" model="ir.actions.act_window">
+            <field name="name">Lead Scores</field>
+            <field name="res_model">shopify.ai.lead.score</field>
+            <field name="view_mode">tree,form</field>
+        </record>
+
+        <menuitem id="menu_shopflow_ai_lead_score"
+                  name="Lead Scores"
+                  parent="menu_shopflow_ai"
+                  action="action_shopify_ai_lead_score"
+                  sequence="20"/>
+    </data>
+</odoo>
+

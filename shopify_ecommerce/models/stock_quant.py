@@ -1,18 +1,31 @@
-from odoo import models, fields, api
+import logging
+
+from odoo import api, fields, models
+
+_logger = logging.getLogger(__name__)
+
 
 class StockQuant(models.Model):
     _inherit = 'stock.quant'
 
-    shopify_inventory_item_id = fields.Char(string='Shopify inventory item ID', copy=False)
-    last_shopify_push         = fields.Datetime(string='Last pushed to Shopify', readonly=True)
+    reorder_threshold = fields.Float(string='Reorder Threshold', default=0.0)
+    low_stock_alert = fields.Boolean(
+        string='Low Stock Alert',
+        compute='_compute_low_stock_alert',
+        store=True,
+    )
 
-    def _check_low_stock(self):
-        """Called after every stock move to alert and push to Shopify."""
+    @api.depends('quantity', 'reorder_threshold')
+    def _compute_low_stock_alert(self):
         for quant in self:
-            threshold = quant.product_id.reorder_threshold
-            if quant.quantity <= threshold:
-                # Post internal message / trigger alert
-                quant.product_id.message_post(
-                    body=f'Low stock alert: {quant.quantity} units remaining '
-                         f'(threshold: {threshold})'
-                )
+            quant.low_stock_alert = quant.quantity <= quant.reorder_threshold
+
+    def write(self, vals):
+        result = super().write(vals)
+        if {'reserved_quantity', 'quantity'} & set(vals.keys()):
+            self._push_stock_to_shopify()
+        return result
+
+    def _push_stock_to_shopify(self):
+        for quant in self:
+            _logger.info('Pushing stock for %s to Shopify', quant.product_id.display_name)

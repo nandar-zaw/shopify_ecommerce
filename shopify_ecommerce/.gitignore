@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Odoo cache
+*.log
+*.pid
+
+# macOS
+.DS_Store
+
+# VS Code
+.vscode/
+
+# PyCharm
+.idea/
+
+# Python virtual env (if any)
+venv/
+.env/
+
+# Test / coverage
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Odoo compiled translations
+*.mo
+
+# Temporary files
+*.swp
+*.swo
+*~
