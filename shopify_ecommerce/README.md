@@ -20,82 +20,72 @@ This project solves that problem by building a **bidirectional synchronization m
 
 ## Key Features
 
-- **Product Sync** — Export Odoo products to Shopify with one click; fields include title, price, and publish status
-- **Order Import** — Shopify orders are pulled into Odoo as `sale.order` records with full line item detail
-- **Inventory Sync** — Hourly cron job pushes `stock.quant` levels to Shopify; incoming webhook updates Odoo quantities
-- **Webhook Processing** — Receives and validates Shopify webhook events (`orders/create`, `inventory_levels/update`, etc.) using HMAC verification
-- **Abandoned Cart Recovery** — `sale.cart` model tracks incomplete carts; `action_convert_to_order()` converts them to sale orders
-- **AI Recommendations (stub)** — `shopify.ai.recommendation` model stores ML-driven product suggestion scores
-- **Lead Scoring (stub)** — `shopify.lead.score` computes hot/warm/cold conversion probability bands per customer
-- **Chatbot Support (stub)** — `shopify.ai.chat.session` tracks support transcripts and escalation events
-- **DTOs** — Clean data transfer objects decouple the Shopify API payload structure from Odoo ORM models
-- **Security** — Built on Odoo 17's native role-based access control; all model permissions defined in `ir.model.access.csv`
+- **Customer Sync (Upsert)** — `res.partner.sync_from_shopify(customer_data)` maps Shopify `id`, `email`, `first_name`, and `last_name` into partner fields, then upserts by `shopflow_customer_id` first and `email` second.
+- **Order Import Pipeline** — `shopify.sync.sync_orders_from_shopify()` pulls Shopify orders and calls `sale.order._shopflow_import_from_shopify_order()` to create Odoo quotations/orders with mapped partner and line items.
+- **Duplicate Protection on Orders** — `sale.order.shopify_order_id` is indexed and unique, so already-imported Shopify orders are skipped safely.
+- **Auto Fulfillment for Paid Orders** — Imported orders with `financial_status = paid` are auto-confirmed and run through picking validation logic.
+- **Product Export + Import** — `product.template.action_export_to_shopify()` upserts product payloads to Shopify and stores `shopify_product_id`, `shopify_synced`, and `shopify_synced_on`; `import_from_shopify()` paginates products and upserts templates/variants.
+- **Sync Logging + Config Health** — `shopify.sync.log` tracks sync status (`pending/success/failed`) and `shopify.config.action_test_connection()` verifies API connectivity with cached token handling.
 
 ---
 
 ## Use Cases
 
-1. **As a store manager**, I want to export an Odoo product to my Shopify store with a single click, so that I don't have to re-enter product details in two systems.
+1. **As an operations user**, I can run customer sync so Shopify customers are created/updated in `res.partner` using `shopflow_customer_id` and email matching.
 
-2. **As a warehouse staff member**, I want Odoo's inventory levels to automatically reflect what is shown on the Shopify storefront, so that I can avoid overselling and fulfill orders accurately.
+2. **As a sales user**, I can import Shopify orders into Odoo and keep a stable external mapping via `sale.order.shopify_order_id` to prevent duplicates.
 
-3. **As a sales representative**, I want to see a lead score for each customer based on their Shopify purchase history, so that I can prioritize follow-up on the highest-value prospects.
+3. **As a fulfillment user**, paid Shopify orders are auto-confirmed and trigger picking validation, reducing manual follow-up after import.
 
-4. **As a customer service agent**, I want to view a customer's full Shopify order history inside Odoo when handling a support request, so that I can resolve issues without switching between platforms.
+4. **As a catalog manager**, I can export a product from `product.template` to Shopify and retain the returned `shopify_product_id` for future updates.
 
-5. **As a store administrator**, I want to configure my Shopify API credentials and webhook secret inside Odoo, so that I can control which store events trigger data synchronization.
+5. **As a catalog manager**, I can import Shopify products in bulk and upsert templates/variants in Odoo using Shopify product/variant identifiers.
 
-6. **As a marketing manager**, I want to see which customers abandoned their carts and receive AI-powered product recommendations for them, so that I can run targeted recovery campaigns.
-
-7. **As a developer**, I want all Shopify API payloads mapped through typed DTOs before they touch the Odoo ORM, so that the codebase is maintainable and testable without spinning up a full Odoo instance.
+6. **As an admin**, I can test Shopify credentials in `shopify.config` and review per-run outcomes in `shopify.sync.log`.
 
 ---
 
 ## Architecture Overview
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        SHOPIFY STORE                            │
-│              (Products, Orders, Inventory, Customers)           │
-└──────────────────────┬──────────────────────────────────────────┘
-                       │
-          REST API (HTTPS)  │  Webhooks (HTTPS POST)
-                       │
-┌──────────────────────▼──────────────────────────────────────────┐
-│              ODOO 17 MODULE — shopify_ecommerce                  │
-│                                                                 │
-│  ┌─────────────────┐   ┌──────────────────┐   ┌─────────────┐  │
-│  │   API Layer     │   │   Sync Engine    │   │  Webhook    │  │
-│  │ shopify_config  │──▶│  shopify_sync    │◀──│  Handler    │  │
-│  │ _get_headers()  │   │  execute()       │   │  hmac valid │  │
-│  └─────────────────┘   └────────┬─────────┘   └─────────────┘  │
-│                                 │                               │
-│  ┌──────────────────────────────▼──────────────────────────┐   │
-│  │                   DTO Layer (dto.py)                     │   │
-│  │  ShopifyProductDTO  ShopifyOrderDTO  ShopifyCustomerDTO  │   │
-│  └──────────────────────────────┬──────────────────────────┘   │
-│                                 │                               │
-│  ┌──────────────────────────────▼──────────────────────────┐   │
-│  │                  Odoo ORM Models                         │   │
-│  │  product.template  sale.order  stock.quant  res.partner  │   │
-│  │  sale.cart  shopify.ai.recommendation  shopify.lead.score│   │
-│  └──────────────────────────────┬──────────────────────────┘   │
-└─────────────────────────────────┼───────────────────────────────┘
-                                  │
-┌─────────────────────────────────▼───────────────────────────────┐
-│                     PostgreSQL 15 Database                       │
-│              (odoo17 — port 5433 via Docker Compose)             │
-└─────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────┐
+│ Shopify Admin API            │
+│ (products, orders, customers)│
+└───────────────┬──────────────┘
+                │
+┌───────────────▼────────────────────────────────────────────────┐
+│ Odoo module: shopify_ecommerce                                 │
+│                                                                │
+│  shopify.config                                                 │
+│  - stores credentials/store URL                                │
+│  - builds authenticated client                                 │
+│  - action_test_connection()                                    │
+│                                                                │
+│  shopify.sync (service model)                                  │
+│  - sync_orders_from_shopify()                                  │
+│  - sync_products_to_shopify()                                  │
+│  - sync_customers_from_shopify()                               │
+│  - writes shopify.sync.log per sync run                        │
+│                                                                │
+│  Domain model handlers                                          │
+│  - res.partner.sync_from_shopify()                             │
+│  - sale.order._shopflow_import_from_shopify_order()            │
+│  - product.template.action_export_to_shopify()/import_from_... │
+└───────────────┬────────────────────────────────────────────────┘
+                │
+┌───────────────▼──────────────┐
+│ PostgreSQL (Odoo ORM models) │
+└──────────────────────────────┘
 ```
 
 **Sync Flows:**
 
 | Direction | Trigger | Mechanism |
 |---|---|---|
-| Odoo → Shopify | User clicks "Export to Shopify" | `action_export_to_shopify()` → REST POST |
-| Shopify → Odoo (Orders) | Webhook `orders/create` | `ShopifyWebhookEvent` → `sale.order` |
-| Odoo → Shopify (Inventory) | Hourly cron | `_cron_sync_inventory()` → REST PUT |
-| Shopify → Odoo (Inventory) | Webhook `inventory_levels/update` | `ShopifyWebhookEvent` → `stock.quant` |
+| Shopify → Odoo (Customers) | Manual/cron customer sync | `shopify.sync.sync_customers_from_shopify()` → `res.partner.sync_from_shopify()` |
+| Shopify → Odoo (Orders) | Manual/cron order sync | `shopify.sync.sync_orders_from_shopify()` → `sale.order._shopflow_import_from_shopify_order()` |
+| Odoo → Shopify (Products) | Product button / product sync job | `product.template.action_export_to_shopify()` via configured Shopify client |
+| Shopify → Odoo (Products) | Product import operation | `product.template.import_from_shopify()` → `_upsert_product_from_shopify()` |
 
 ---
 
@@ -110,8 +100,8 @@ This project solves that problem by building a **bidirectional synchronization m
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git
-cd YOUR_REPO
+git clone https://github.com/nandar-zaw/shopify_ecommerce.git
+cd shopify_ecommerce
 
 # Start Odoo 17 + PostgreSQL 15
 docker-compose up -d
@@ -247,8 +237,10 @@ See `.github/workflows/ci.yml` for the full pipeline definition.
 
 ## Diagrams
 
-- **Domain Model Class Diagram** → [`docs/class_diagram.md`](docs/class_diagram.md)
-- **Database ER Diagram** → [`docs/er_diagram.md`](docs/er_diagram.md)
+- **Domain Model Class Diagram**  
+  ![](./images/shopify_class_diagram.png)
+- **Database ER Diagram**
+  ![](./images/shopify_er_diagram.png)
 
 Both diagrams use [Mermaid](https://mermaid.live) syntax and render natively in GitHub.
 
